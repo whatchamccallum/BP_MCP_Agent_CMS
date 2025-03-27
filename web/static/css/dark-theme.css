@@ -1,0 +1,403 @@
+/* Dark Theme Styles */
+:root {
+    --dark-bg-color: #000000;
+    --dark-text-color: #ffffff;
+    --dark-card-bg: #121212;
+    --dark-card-text: #e0e0e0;
+    --dark-border-color: #333333;
+    --dark-input-bg: #1a1a1a;
+    --dark-input-text: #e0e0e0;
+    --dark-input-border: #444444;
+    --dark-dropdown-bg: #1a1a1a;
+    --dark-dropdown-hover: #333333;
+    --dark-modal-bg: #121212;
+    --dark-modal-header: #1a1a1a;
+    --dark-navbar-bg: #0a0a0a;
+    --dark-navbar-text: #ffffff;
+    --dark-primary-color: rgb(228, 12, 91);
+    --dark-primary-text: #ffffff;
+    --dark-secondary-color: rgb(180, 10, 72);
+    --dark-secondary-text: #ffffff;
+    --dark-danger-color: rgb(228, 12, 91);
+    --dark-danger-text: #ffffff;
+    --dark-success-color: rgb(186, 12, 141);
+    --dark-success-text: #ffffff;
+    --dark-warning-color: rgb(228, 54, 119);
+    --dark-warning-text: #ffffff;
+    --dark-info-color: rgb(186, 12, 141);
+    --dark-info-text: #ffffff;
+    --dark-pink-light: rgb(255, 64, 129);
+    --dark-pink-medium: rgb(228, 12, 91);
+    --dark-pink-dark: rgb(180, 10, 72);
+}
+
+body.dark-theme {
+    background-color: var(--dark-bg-color);
+    color: var(--dark-text-color);
+}
+
+/* Ensure all elements with background-color get proper dark theme */
+.dark-theme .bg-light,
+.dark-theme .bg-white {
+    background-color: var(--dark-card-bg) !important;
+    color: var(--dark-text-color) !important;
+}
+
+/* Override test-config-table styles for dark mode */
+.dark-theme .test-config-table .table thead th {
+    background-color: #0a0a0a !important;
+    border-bottom: 2px solid var(--dark-pink-medium) !important;
+    color: var(--dark-text-color) !important;
+}
+
+.dark-theme .test-config-table .table tbody tr:hover {
+    background-color: rgba(228, 12, 91, 0.15) !important;
+}
+
+.dark-theme .test-config-table .table {
+    color: var(--dark-text-color) !important;
+}
+
+.dark-theme .test-config-table .card-body {
+    background-color: var(--dark-card-bg) !important;
+}
+
+/* Cards */
+.dark-theme .card {
+    background-color: var(--dark-card-bg);
+    color: var(--dark-card-text);
+    border-color: var(--dark-border-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .card-body {
+    background-color: var(--dark-card-bg);
+    color: var(--dark-card-text);
+}
+
+.dark-theme .card-header,
+.dark-theme .card-footer {
+    background-color: #0a0a0a;
+    color: var(--dark-card-text);
+    border-color: var(--dark-border-color);
+}
+
+/* Add pink accent for cards */
+.dark-theme .card-header {
+    border-top: 2px solid var(--dark-pink-medium);
+}
+
+/* Tables */
+.dark-theme .table {
+    color: var(--dark-text-color);  /* Brighter text for better contrast */
+}
+
+.dark-theme .table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+.dark-theme .table-striped > tbody > tr:nth-of-type(even) {
+    background-color: rgba(0, 0, 0, 0.05);  /* Added styling for even rows */
+}
+
+.dark-theme .table-hover tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.1);  /* Slightly brighter hover effect */
+    color: var(--dark-text-color);
+}
+
+.dark-theme .table th,
+.dark-theme .table td {
+    border-color: var(--dark-border-color);
+}
+
+/* Ensure table headings are visible */
+.dark-theme .table thead th {
+    background-color: var(--dark-navbar-bg);
+    color: var(--dark-text-color);
+    border-bottom: 2px solid var(--dark-pink-medium);
+}
+
+/* Buttons */
+.dark-theme .btn-primary {
+    background-color: var(--dark-pink-medium);
+    color: var(--dark-primary-text);
+    border-color: var(--dark-pink-medium);
+}
+
+.dark-theme .btn-primary:hover {
+    background-color: var(--dark-pink-dark);
+    border-color: var(--dark-pink-dark);
+}
+
+.dark-theme .btn-secondary {
+    background-color: #444444;
+    color: var(--dark-secondary-text);
+    border-color: #444444;
+}
+
+.dark-theme .btn-secondary:hover {
+    background-color: #555555;
+    border-color: #555555;
+}
+
+.dark-theme .btn-danger {
+    background-color: var(--dark-danger-color);
+    color: var(--dark-danger-text);
+    border-color: var(--dark-danger-color);
+}
+
+.dark-theme .btn-success {
+    background-color: var(--dark-success-color);
+    color: var(--dark-success-text);
+    border-color: var(--dark-success-color);
+}
+
+.dark-theme .btn-warning {
+    background-color: var(--dark-warning-color);
+    color: var(--dark-warning-text);
+    border-color: var(--dark-warning-color);
+}
+
+.dark-theme .btn-info {
+    background-color: var(--dark-info-color);
+    color: var(--dark-info-text);
+    border-color: var(--dark-info-color);
+}
+
+.dark-theme .btn-outline-primary {
+    color: var(--dark-pink-medium);
+    border-color: var(--dark-pink-medium);
+}
+
+.dark-theme .btn-outline-primary:hover {
+    background-color: var(--dark-pink-medium);
+    color: var(--dark-primary-text);
+}
+
+.dark-theme .btn-outline-secondary {
+    color: #aaaaaa;
+    border-color: #444444;
+}
+
+.dark-theme .btn-outline-secondary:hover {
+    background-color: #444444;
+    color: var(--dark-secondary-text);
+}
+
+/* Forms */
+.dark-theme .form-control,
+.dark-theme .form-select {
+    background-color: var(--dark-input-bg);
+    color: var(--dark-input-text);
+    border-color: var(--dark-input-border);
+}
+
+.dark-theme .form-control:focus,
+.dark-theme .form-select:focus {
+    background-color: var(--dark-input-bg);
+    color: var(--dark-input-text);
+    border-color: var(--dark-pink-medium);
+    box-shadow: 0 0 0 0.25rem rgba(228, 12, 91, 0.25);
+}
+
+.dark-theme .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.dark-theme .form-label,
+.dark-theme .form-check-label {
+    color: var(--dark-text-color);
+}
+
+.dark-theme .form-check-input {
+    background-color: var(--dark-input-bg);
+    border-color: var(--dark-input-border);
+}
+
+.dark-theme .form-check-input:checked {
+    background-color: var(--dark-pink-medium);
+    border-color: var(--dark-pink-medium);
+}
+
+/* Modals */
+.dark-theme .modal-content {
+    background-color: var(--dark-modal-bg);
+    color: var(--dark-card-text);
+    border-color: var(--dark-border-color);
+}
+
+.dark-theme .modal-header {
+    background-color: var(--dark-modal-header);
+    color: var(--dark-card-text);
+    border-color: var(--dark-border-color);
+}
+
+.dark-theme .modal-footer {
+    border-color: var(--dark-border-color);
+}
+
+.dark-theme .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Dropdown menus */
+.dark-theme .dropdown-menu {
+    background-color: var(--dark-dropdown-bg);
+    color: var(--dark-card-text);
+    border-color: var(--dark-border-color);
+}
+
+.dark-theme .dropdown-item {
+    color: var(--dark-card-text);
+}
+
+.dark-theme .dropdown-item:hover,
+.dark-theme .dropdown-item:focus {
+    background-color: var(--dark-dropdown-hover);
+    color: var(--dark-text-color);
+}
+
+.dark-theme .dropdown-divider {
+    border-color: var(--dark-border-color);
+}
+
+/* Navbar */
+.dark-theme .navbar-dark {
+    background-color: #1a1a1a !important;
+    color: var(--dark-navbar-text);
+    border-bottom: 1px solid var(--dark-pink-dark);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+.dark-theme .navbar-brand {
+    color: var(--dark-pink-medium) !important;
+    font-weight: bold;
+}
+
+/* Badges */
+.dark-theme .badge.bg-primary {
+    background-color: var(--dark-pink-medium) !important;
+    color: var(--dark-primary-text);
+}
+
+.dark-theme .badge.bg-secondary {
+    background-color: #444444 !important;
+    color: var(--dark-secondary-text);
+}
+
+.dark-theme .badge.bg-success {
+    background-color: var(--dark-success-color) !important;
+    color: var(--dark-success-text);
+}
+
+.dark-theme .badge.bg-danger {
+    background-color: var(--dark-danger-color) !important;
+    color: var(--dark-danger-text);
+}
+
+/* Alerts */
+.dark-theme .alert {
+    background-color: var(--dark-card-bg);
+    color: var(--dark-card-text);
+    border-color: var(--dark-border-color);
+}
+
+.dark-theme .alert-primary {
+    border-left: 4px solid var(--dark-pink-medium);
+    background-color: rgba(228, 12, 91, 0.1);
+}
+
+.dark-theme .alert-danger {
+    border-left: 4px solid var(--dark-danger-color);
+    background-color: rgba(228, 12, 91, 0.1);
+}
+
+.dark-theme .alert-success {
+    border-left: 4px solid var(--dark-success-color);
+    background-color: rgba(186, 12, 141, 0.1);
+}
+
+.dark-theme .alert-warning {
+    border-left: 4px solid var(--dark-warning-color);
+    background-color: rgba(228, 54, 119, 0.1);
+}
+
+.dark-theme .alert-info {
+    border-left: 4px solid var(--dark-info-color);
+    background-color: rgba(186, 12, 141, 0.1);
+}
+/* Add pink accents throughout the UI */
+.dark-theme a {
+    color: var(--dark-pink-light);
+}
+
+.dark-theme a:hover {
+    color: var(--dark-pink-medium);
+}
+
+.dark-theme .nav-link.active {
+    color: var(--dark-pink-medium) !important;
+    border-bottom: 2px solid var(--dark-pink-medium);
+}
+
+/* Pagination with pink */
+.dark-theme .page-item.active .page-link {
+    background-color: var(--dark-pink-medium);
+    border-color: var(--dark-pink-medium);
+}
+
+.dark-theme .form-range::-webkit-slider-thumb {
+    background-color: var(--dark-pink-medium);
+}
+
+/* Footer */
+.dark-theme .footer.bg-light {
+    background-color: #000000 !important;
+    color: var(--dark-navbar-text);
+    border-top: 1px solid var(--dark-border-color);
+}
+
+.dark-theme .text-muted {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Device-specific styles */
+.dark-theme .card-header {
+    color: var(--dark-text-color);
+    font-weight: bold;
+    background-color: #212529;
+}
+
+/* Ensure device list rows are visible */
+.dark-theme .table td,
+.dark-theme .table th {
+    color: #ffffff !important; /* Force white text */
+}
+
+/* Target devices table specifically */
+.dark-theme .card-body .table-responsive .table {
+    color: #ffffff !important;
+}
+
+.dark-theme .table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: #151515 !important; /* Darker background for odd rows */
+}
+
+.dark-theme .table-striped > tbody > tr:nth-of-type(even) {
+    background-color: #242424 !important; /* Slightly lighter for even rows */
+}
+
+.dark-theme .table-hover tbody tr:hover {
+    background-color: rgba(228, 12, 91, 0.15) !important; /* Pink tint for hover */
+}
+
+/* Fix badge contrast in dark mode */
+.dark-theme .badge.bg-danger {
+    background-color: var(--dark-danger-color) !important;
+    color: white;
+}
+
+.dark-theme .badge.bg-success {
+    background-color: var(--dark-success-color) !important;
+    color: white;
+}

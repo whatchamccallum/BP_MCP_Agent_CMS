@@ -1,0 +1,403 @@
+{% extends 'base.html' %}
+
+{% block title %}Test Run #{{ test_run.id }} - BP MCP Agent CMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Test Run #{{ test_run.id }}: {{ test_run.test_configuration.name }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('dashboard.test_runs') }}" class="btn btn-sm btn-outline-secondary" title="Return to Test Runs">
+                <i class="fas fa-arrow-left"></i> Back to Test Runs
+            </a>
+            {% if test_run.status == 'running' %}
+            <form action="{{ url_for('dashboard.stop_test_run', id=test_run.id) }}" method="POST" class="ajax-form">
+                <button type="submit" class="btn btn-sm btn-outline-warning ajax-button" data-url="{{ url_for('dashboard.stop_test_run', id=test_run.id) }}" data-method="POST" data-confirm="Are you sure you want to stop this test run?" title="Stop the current test run">
+                    <i class="fas fa-stop"></i> Stop Test
+                </button>
+            </form>
+            {% endif %}
+            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#generateReportModal" title="Generate a report for this test run">
+                <i class="fas fa-file-alt"></i> Generate Report
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Test Details and Results Section -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-1"></i>
+                Test Run Details
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <th scope="row">Status</th>
+                            <td>
+                                {% if test_run.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                                {% elif test_run.status == 'running' %}
+                                <span class="badge bg-primary">Running</span>
+                                {% elif test_run.status == 'failed' %}
+                                <span class="badge bg-danger">Failed</span>
+                                {% elif test_run.status == 'stopped' %}
+                                <span class="badge bg-warning">Stopped</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ test_run.status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Test Configuration</th>
+                            <td>
+                                <a href="{{ url_for('dashboard.test_config_detail', id=test_run.test_configuration.id) }}" title="View test configuration details">
+                                    {{ test_run.test_configuration.name }}
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Environment</th>
+                            <td>{{ test_run.environment.name }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Device</th>
+                            <td>{{ test_run.device.name }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Start Time</th>
+                            <td>{{ test_run.start_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">End Time</th>
+                            <td>{{ test_run.end_time.strftime('%Y-%m-%d %H:%M:%S') if test_run.end_time else 'N/A' }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Duration</th>
+                            <td>
+                                {% if test_run.start_time and test_run.end_time %}
+                                {{ (test_run.end_time - test_run.start_time).total_seconds() // 60 }} minutes
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-chart-line me-1"></i>
+                    Test Results
+                </div>
+                {% if test_run.status == 'completed' or test_run.status == 'failed' %}
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-secondary" id="refreshResults" title="Refresh test results">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if test_run.results %}
+                <div id="resultsContainer">
+                    <div class="mb-3">
+                        <h5>Summary</h5>
+                        <table class="table table-sm">
+                            <tbody>
+                                {% for key, value in test_run.results.summary.items() %}
+                                <tr>
+                                    <th>{{ key|replace('_', ' ')|title }}</th>
+                                    <td>{{ value }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if test_run.results.metrics %}
+                    <div class="mb-3">
+                        <h5>Metrics</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th>Value</th>
+                                        <th>Unit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for metric in test_run.results.metrics %}
+                                    <tr>
+                                        <td>{{ metric.name }}</td>
+                                        <td>{{ metric.value }}</td>
+                                        <td>{{ metric.unit }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if test_run.results.charts %}
+                    <div>
+                        <h5>Charts</h5>
+                        <div class="row">
+                            {% for chart in test_run.results.charts %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header">{{ chart.title }}</div>
+                                    <div class="card-body">
+                                        <img src="{{ chart.url }}" alt="{{ chart.title }}" class="img-fluid">
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% elif test_run.status == 'running' %}
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Test is currently running. Results will be available once the test is completed.
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    No results available for this test run.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reports Section -->
+{% if reports %}
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-file-alt me-1"></i>
+        Reports
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Format</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr>
+                        <td>{{ report.name }}</td>
+                        <td>{{ report.format.upper() }}</td>
+                        <td>{{ report.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('dashboard.download_report', id=report.id) }}" class="btn btn-sm btn-primary" title="Download this report">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteReportModal{{ report.id }}" title="Delete this report">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Delete Report Modal -->
+                            <div class="modal fade" id="deleteReportModal{{ report.id }}" tabindex="-1" aria-labelledby="deleteReportModalLabel{{ report.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteReportModalLabel{{ report.id }}">Delete Report</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete the report "{{ report.name }}"?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{{ url_for('dashboard.delete_report', id=report.id) }}" method="POST">
+                                                <button type="submit" class="btn btn-danger" title="Confirm deletion of this report">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Media Files Section -->
+{% if media_files %}
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-photo-video me-1"></i>
+        Media Files
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for media in media_files %}
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        {% if media.type == 'image' %}
+                        <a href="{{ url_for('dashboard.view_media', id=media.id) }}" target="_blank" title="View this image">
+                            <img src="{{ url_for('dashboard.view_media', id=media.id) }}" class="img-thumbnail mb-2" alt="{{ media.name }}">
+                        </a>
+                        {% elif media.type == 'video' %}
+                        <div class="video-thumbnail position-relative">
+                            <i class="fas fa-film fa-3x text-primary mb-2"></i>
+                            <div class="video-overlay">
+                                <a href="{{ url_for('dashboard.view_media', id=media.id) }}" target="_blank" class="btn btn-sm btn-primary" title="Play this video">
+                                    <i class="fas fa-play me-1"></i> Play
+                                </a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <i class="fas fa-file fa-3x text-secondary mb-2"></i>
+                        {% endif %}
+                        <h6 class="card-title text-truncate">{{ media.name }}</h6>
+                        <p class="card-text small text-muted">{{ media.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        <div class="btn-group">
+                            <a href="{{ url_for('dashboard.download_media', id=media.id) }}" class="btn btn-sm btn-primary" title="Download this media file">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteMediaModal{{ media.id }}" title="Delete this media file">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="card-footer">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadMediaModal" title="Upload a new media file">
+            <i class="fas fa-upload me-1"></i> Upload Media
+        </button>
+    </div>
+</div>
+{% endif %}
+
+<!-- Media Modals -->
+{% if media_files %}
+{% for media in media_files %}
+<!-- Delete Media Modal -->
+<div class="modal fade" id="deleteMediaModal{{ media.id }}" tabindex="-1" aria-labelledby="deleteMediaModalLabel{{ media.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteMediaModalLabel{{ media.id }}">Delete Media</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete "{{ media.name }}"?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('dashboard.delete_media', id=media.id) }}" method="POST">
+                    <button type="submit" class="btn btn-danger" title="Confirm deletion of this media file">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- Upload Media Modal -->
+<div class="modal fade" id="uploadMediaModal" tabindex="-1" aria-labelledby="uploadMediaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadMediaModalLabel">Upload Media</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('dashboard.upload_media', id=test_run.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="media_file" class="form-label">Media File</label>
+                        <input type="file" class="form-control" id="media_file" name="media_file" required>
+                        <div class="form-text">Supported formats: Images (JPG, PNG, GIF), Videos (MP4), and Documents (PDF)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="media_name" class="form-label">Name (Optional)</label>
+                        <input type="text" class="form-control" id="media_name" name="media_name">
+                        <div class="form-text">If left blank, the original filename will be used.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="media_description" class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="media_description" name="media_description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" title="Upload this media file">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Generate Report Modal -->
+<div class="modal fade" id="generateReportModal" tabindex="-1" aria-labelledby="generateReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="generateReportModalLabel">Generate Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('dashboard.generate_report', id=test_run.id) }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="report_name" class="form-label">Report Name</label>
+                        <input type="text" class="form-control" id="report_name" name="report_name" value="Report for {{ test_run.test_configuration.name }} - {{ test_run.start_time.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="report_format" class="form-label">Format</label>
+                        <select class="form-select" id="report_format" name="report_format" required>
+                            <option value="pdf">PDF</option>
+                            <option value="csv">CSV</option>
+                            <option value="html">HTML</option>
+                            <option value="json">JSON</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="report_template" class="form-label">Template</label>
+                        <select class="form-select" id="report_template" name="report_template">
+                            <option value="default">Default</option>
+                            <option value="executive">Executive Summary</option>
+                            <option value="detailed">Detailed</option>
+                            <option value="technical">Technical</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" title="Generate this report">Generate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

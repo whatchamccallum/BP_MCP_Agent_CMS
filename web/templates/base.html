@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BP MCP Agent CMS{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-theme.css') }}">
+    
+    <meta name="csrf-token" content="{{ form.csrf_token.current_token if form and form.csrf_token else '' }}">
+    {% if session.get('jwt_token') %}
+    <meta name="jwt-token" content="{{ session.get('jwt_token') }}">
+    {% endif %}
+    
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" aria-label="Main Navigation">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home.index') }}">
+                <i class="fas fa-server"></i> BP MCP Agent CMS
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto" role="list">
+                    {% if session.get('jwt_token') %}
+                    <li class="nav-item" role="listitem">
+                        <a class="nav-link" href="{{ url_for('dashboard.index') }}" aria-label="Dashboard">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item" role="listitem">
+                        <a class="nav-link" href="{{ url_for('dashboard.test_configs') }}" aria-label="Test Configs">
+                            <i class="fas fa-cogs"></i> Test Configs
+                        </a>
+                    </li>
+                    <li class="nav-item" role="listitem">
+                        <a class="nav-link" href="{{ url_for('dashboard.test_runs') }}" aria-label="Test Runs">
+                            <i class="fas fa-play-circle"></i> Test Runs
+                        </a>
+                    </li>
+                    <li class="nav-item" role="listitem">
+                        <a class="nav-link" href="{{ url_for('dashboard.reports') }}" aria-label="Reports">
+                            <i class="fas fa-file-alt"></i> Reports
+                        </a>
+                    </li>
+                    <li class="nav-item" role="listitem">
+                        <a class="nav-link" href="{{ url_for('dashboard.media') }}" aria-label="Media">
+                            <i class="fas fa-photo-video"></i> Media
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown" role="listitem">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Settings">
+                            <i class="fas fa-tools"></i> Settings
+                        </a>
+                        <ul class="dropdown-menu" role="list" aria-label="Settings">
+                            <li role="listitem">
+                                <a class="dropdown-item" href="{{ url_for('dashboard.environments') }}" aria-label="Environments">
+                                    <i class="fas fa-network-wired"></i> Environments
+                                </a>
+                            </li>
+                            <li role="listitem">
+                                <a class="dropdown-item" href="{{ url_for('dashboard.devices') }}" aria-label="Devices">
+                                    <i class="fas fa-server"></i> Devices
+                                </a>
+                            </li>
+                            {% if current_user and current_user.is_admin %}
+                            <li role="listitem">
+                                <a class="dropdown-item" href="{{ url_for('dashboard.users') }}" aria-label="Users">
+                                    <i class="fas fa-users"></i> Users
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav" role="list">
+                    {% if session.get('jwt_token') %}
+                    <li class="nav-item dropdown" role="listitem">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User Menu">
+                            <i class="fas fa-user"></i> {{ current_user.username if current_user else 'User' }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" role="list" aria-label="User Menu">
+                            <li role="listitem">
+                                <a class="dropdown-item" href="{{ url_for('dashboard.profile') }}" aria-label="Profile">
+                                    <i class="fas fa-id-card"></i> Profile
+                                </a>
+                            </li>
+                            <li role="listitem">
+                                <a class="dropdown-item" href="#" onclick="toggleTheme(); return false;" aria-label="Toggle Theme">
+                                    <i class="fas fa-adjust"></i> <span id="theme-toggle-text">Toggle Dark Mode</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li role="listitem">
+                                <a class="dropdown-item" href="{{ url_for('home.logout') }}" aria-label="Logout">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item" role="listitem">
+                        <a class="nav-link" href="{{ url_for('home.login') }}" aria-label="Login">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mt-4" role="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+    <footer class="footer mt-5 py-3 bg-light" role="contentinfo">
+        <div class="container text-center">
+            <span class="text-muted">Breaking Point MCP Agent CMS &copy; {{ now.year }}</span>
+        </div>
+    </footer>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

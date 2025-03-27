@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}Test Configurations - BP MCP Agent CMS{% endblock %}
+
+{% block scripts %}
+<script>
+  // Store routes for AJAX calls
+  window.routes = {
+    checkTestConfigName: "{{ url_for('dashboard.check_test_config_name') }}"
+  };
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    // Function to validate test config name
+    function validateTestConfigName(nameInput, existingId = null) {
+      const name = nameInput.value.trim();
+      if (name === '') {
+        showFeedback(nameInput, 'Test configuration name is required', false);
+        return false;
+      }
+      
+      // Check if name exists
+      const params = new URLSearchParams({
+        name: name
+      });
+      
+      if (existingId) {
+        params.append('id', existingId);
+      }
+      
+      fetch(`${window.routes.checkTestConfigName}?${params}`)
+        .then(response => response.json())
+        .then(data => {
+          showFeedback(nameInput, data.message, data.valid);
+        })
+        .catch(error => {
+          console.error('Error checking test configuration name:', error);
+          showFeedback(nameInput, 'Error validating name', false);
+        });
+    }
+    
+    // Function to show feedback
+    function showFeedback(inputElement, message, isValid) {
+      const feedbackElement = inputElement.nextElementSibling;
+      
+      if (isValid) {
+        inputElement.classList.remove('is-invalid');
+        inputElement.classList.add('is-valid');
+        if (feedbackElement) {
+          feedbackElement.textContent = '';
+        }
+      } else {
+        inputElement.classList.remove('is-valid');
+        inputElement.classList.add('is-invalid');
+        if (feedbackElement) {
+          feedbackElement.textContent = message;
+        }
+      }
+      
+      return isValid;
+    }
+    
+    // Add event listeners to name inputs for create and edit forms
+    const createNameInput = document.getElementById('name');
+    if (createNameInput) {
+      createNameInput.addEventListener('blur', function() {
+        validateTestConfigName(this);
+      });
+    }
+    
+    // Edit form name validation
+    const editForms = document.querySelectorAll('form[action^="{{ url_for('dashboard.update_test_config', id=0) }}"]');
+    editForms.forEach(form => {
+      const idMatch = form.action.match(/\/(\d+)\/update/);
+      if (idMatch && idMatch[1]) {
+        const id = idMatch[1];
+        const nameInput = document.getElementById(`name${id}`);
+        if (nameInput) {
+          nameInput.addEventListener('blur', function() {
+            validateTestConfigName(this, id);
+          });
+        }
+      }
+    });
+    
+    // Validate JSON format in configuration textareas
+    document.querySelectorAll('textarea[name="configuration"]').forEach(textarea => {
+      textarea.addEventListener('blur', function() {
+        try {
+          const jsonContent = this.value.trim();
+          if (jsonContent) {
+            JSON.parse(jsonContent);
+            showFeedback(this, '', true);
+          }
+        } catch (e) {
+          showFeedback(this, 'Invalid JSON format', false);
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <style>
+        .ajax-form {
+            display: block;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="test-config-table">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Test Configurations</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-sm btn-outline-secondary" title="Return to Dashboard">
+                    <i class="fas fa-arrow-left me-1"></i> Dashboard
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createTestConfigModal" title="Create a new test configuration">
+                    <i class="fas fa-plus me-1"></i> New Test Configuration
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for config in test_configs %}
+                        <tr>
+                            <td>{{ config.name }}</td>
+                            <td>{{ config.description }}</td>
+                            <td>{{ config.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <form action="{{ url_for('dashboard.run_test', id=config.id) }}" method="POST" class="d-inline ajax-form">
+                                    <button type="submit" class="btn btn-sm btn-success" title="Run this test configuration">
+                                        <i class="fas fa-play me-1"></i> Run
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editTestConfigModal{{ config.id }}" title="Edit test configuration details">
+                                    <i class="fas fa-edit me-1"></i> Edit
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteTestConfigModal{{ config.id }}" title="Delete this test configuration">
+                                    <i class="fas fa-trash me-1"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if test_configs %}
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        No test configurations found. Click the "New Configuration" button to create one.
+    </div>
+    {% endif %}
+
+    <!-- Create Test Configuration Modal -->
+    <div class="modal fade" id="createTestConfigModal" tabindex="-1" aria-labelledby="createTestConfigModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createTestConfigModalLabel">Create Test Configuration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('dashboard.create_test_config') }}" method="POST" class="ajax-form">
+                    <div class="modal-body">
+                        <!-- Validation errors will be inserted here by JavaScript -->
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                            <div class="invalid-feedback" id="name-feedback"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="test_type" class="form-label">Test Type</label>
+                            <select class="form-select" id="test_type" name="test_type" required>
+                                <option value="">Select test type</option>
+                                <option value="performance">Performance Test</option>
+                                <option value="security">Security Test</option>
+                                <option value="application">Application Test</option>
+                                <option value="lawful_intercept">Lawful Intercept</option>
+                                <option value="multicast">Multicast</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% for config in test_configs %}
+    <!-- Edit Test Configuration Modal -->
+    <div class="modal fade" id="editTestConfigModal{{ config.id }}" tabindex="-1" aria-labelledby="editTestConfigModalLabel{{ config.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editTestConfigModalLabel{{ config.id }}">Edit Test Configuration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('dashboard.update_test_config', id=config.id) }}" method="POST" class="ajax-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="name{{ config.id }}" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name{{ config.id }}" name="name" value="{{ config.name }}" required>
+                            <div class="invalid-feedback" id="name-feedback{{ config.id }}"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="test_type{{ config.id }}" class="form-label">Test Type</label>
+                            <select class="form-select" id="test_type{{ config.id }}" name="test_type" required>
+                                <option value="">Select test type</option>
+                                <option value="performance" {% if config.test_type == 'performance' %}selected{% endif %}>Performance Test</option>
+                                <option value="security" {% if config.test_type == 'security' %}selected{% endif %}>Security Test</option>
+                                <option value="application" {% if config.test_type == 'application' %}selected{% endif %}>Application Test</option>
+                                <option value="lawful_intercept" {% if config.test_type == 'lawful_intercept' %}selected{% endif %}>Lawful Intercept</option>
+                                <option value="multicast" {% if config.test_type == 'multicast' %}selected{% endif %}>Multicast</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description{{ config.id }}" class="form-label">Description</label>
+                            <textarea class="form-control" id="description{{ config.id }}" name="description" rows="3">{{ config.description or '' }}</textarea>
+                        </div>
+                        {% if config.config_data %}
+                        <div class="mb-3">
+                            <label for="configuration{{ config.id }}" class="form-label">Configuration (JSON)</label>
+                            <textarea class="form-control" id="configuration{{ config.id }}" name="configuration" rows="10">{{ config.config_data | tojson(indent=2) }}</textarea>
+                            <div class="form-text">Enter test configuration in JSON format.</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="deleteTestConfigModal{{ config.id }}" tabindex="-1" aria-labelledby="deleteTestConfigModalLabel{{ config.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteTestConfigModalLabel{{ config.id }}">Delete Test Configuration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the test configuration "<strong>{{ config.name }}</strong>"?</p>
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        This action cannot be undone, and it may affect test runs that use this configuration.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form action="{{ url_for('dashboard.delete_test_config', id=config.id) }}" method="POST" class="ajax-form">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

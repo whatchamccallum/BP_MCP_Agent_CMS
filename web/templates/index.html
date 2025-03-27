@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - BP MCP Agent CMS{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Breaking Point MCP Agent CMS</h1>
+    <p class="lead">A Content Management System for managing Breaking Point tests, environments, results, and media.</p>
+    <hr class="my-4">
+    <p>This system allows you to create, run, and analyze Breaking Point tests through a user-friendly interface.</p>
+    <p class="lead">
+        {% if session.get('jwt_token') %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('dashboard.index') }}" role="button">
+            <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+        </a>
+        {% else %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('home.login') }}" role="button">
+            <i class="fas fa-sign-in-alt"></i> Login
+        </a>
+        {% endif %}
+    </p>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="fas fa-cogs fa-4x text-primary mb-3"></i>
+                <h5 class="card-title">Test Configurations</h5>
+                <p class="card-text">Create and manage Breaking Point test configurations.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="fas fa-play-circle fa-4x text-success mb-3"></i>
+                <h5 class="card-title">Test Runs</h5>
+                <p class="card-text">Run tests and view their execution results.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-bar fa-4x text-info mb-3"></i>
+                <h5 class="card-title">Analysis</h5>
+                <p class="card-text">Analyze test results with reports and charts.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="fas fa-file-alt fa-4x text-warning mb-3"></i>
+                <h5 class="card-title">Reports</h5>
+                <p class="card-text">Generate and view detailed test reports.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="fas fa-photo-video fa-4x text-danger mb-3"></i>
+                <h5 class="card-title">Media Gallery</h5>
+                <p class="card-text">Access videos and screenshots of test executions.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="fas fa-network-wired fa-4x text-secondary mb-3"></i>
+                <h5 class="card-title">Environments</h5>
+                <p class="card-text">Manage test environments and devices.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

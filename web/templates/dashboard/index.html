@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - BP MCP Agent CMS{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Dashboard</h1>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Test Runs</h5>
+                <h2 class="card-text">{{ test_runs|length }}</h2>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a class="text-white stretched-link" href="{{ url_for('dashboard.test_runs') }}">View Details</a>
+                <div class="text-white"><i class="fas fa-angle-right"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Test Configs</h5>
+                <h2 class="card-text">{{ test_configs|length }}</h2>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a class="text-white stretched-link" href="{{ url_for('dashboard.test_configs') }}">View Details</a>
+                <div class="text-white"><i class="fas fa-angle-right"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Environments</h5>
+                <h2 class="card-text">{{ environments|length }}</h2>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a class="text-white stretched-link" href="{{ url_for('dashboard.environments') }}">View Details</a>
+                <div class="text-white"><i class="fas fa-angle-right"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Devices</h5>
+                <h2 class="card-text">{{ devices|length }}</h2>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a class="text-white stretched-link" href="{{ url_for('dashboard.devices') }}">View Details</a>
+                <div class="text-white"><i class="fas fa-angle-right"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-chart-bar me-1"></i>
+                Recent Test Runs
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Status</th>
+                                <th>Start Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for run in test_runs %}
+                            <tr>
+                                <td>{{ run.test_configuration.name }}</td>
+                                <td>
+                                    {% if run.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% elif run.status == 'running' %}
+                                    <span class="badge bg-primary">Running</span>
+                                    {% elif run.status == 'failed' %}
+                                    <span class="badge bg-danger">Failed</span>
+                                    {% elif run.status == 'stopped' %}
+                                    <span class="badge bg-warning">Stopped</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ run.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ run.start_time }}</td>
+                                <td>
+                                    <a href="{{ url_for('dashboard.test_run_detail', id=run.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <a href="{{ url_for('dashboard.test_runs') }}" class="btn btn-primary">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-cogs me-1"></i>
+                Recent Test Configurations
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for config in test_configs %}
+                            <tr>
+                                <td>{{ config.name }}</td>
+                                <td>{{ config.test_type }}</td>
+                                <td>{{ config.created_at }}</td>
+                                <td>
+                                    <a href="{{ url_for('dashboard.test_config_detail', id=config.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <a href="{{ url_for('dashboard.test_configs') }}" class="btn btn-primary">View All</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

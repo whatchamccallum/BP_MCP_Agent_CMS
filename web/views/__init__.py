@@ -1,0 +1,3 @@
+"""
+Web views module.
+"""

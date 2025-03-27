@@ -1,0 +1,205 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard - Breaking Point MCP Agent CMS{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Dashboard</h1>
+
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Test Runs</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_test_runs %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Test</th>
+                                <th>Environment</th>
+                                <th>Device</th>
+                                <th>Status</th>
+                                <th>Start Time</th>
+                                <th>Duration</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for run in recent_test_runs %}
+                            <tr>
+                                <td>{{ run.id }}</td>
+                                <td>{{ run.test_configuration.name }}</td>
+                                <td>{{ run.environment.name }}</td>
+                                <td>{{ run.device.name }}</td>
+                                <td>
+                                    {% if run.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% elif run.status == 'running' %}
+                                    <span class="badge bg-primary">Running</span>
+                                    {% elif run.status == 'failed' %}
+                                    <span class="badge bg-danger">Failed</span>
+                                    {% elif run.status == 'stopped' %}
+                                    <span class="badge bg-warning">Stopped</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ run.status|capitalize }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ run.start_time|datetime }}</td>
+                                <td>{{ run.duration|duration }}</td>
+                                <td>
+                                    <a href="{{ url_for('dashboard.test_run_detail', id=run.id) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p>No test runs found.</p>
+                {% endif %}
+                <a href="{{ url_for('dashboard.test_runs') }}" class="btn btn-primary">View All Test Runs</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Test Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="testStatusChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Test Types</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="testTypeChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Reports</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_reports %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Test Run</th>
+                                <th>Type</th>
+                                <th>Format</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in recent_reports %}
+                            <tr>
+                                <td>{{ report.id }}</td>
+                                <td>{{ report.name }}</td>
+                                <td>{{ report.test_run.test_configuration.name }} ({{ report.test_run_id }})</td>
+                                <td>{{ report.report_type|capitalize }}</td>
+                                <td>{{ report.file_format|upper }}</td>
+                                <td>{{ report.created_at|datetime }}</td>
+                                <td>
+                                    <a href="{{ url_for('dashboard.download_report', id=report.id) }}" class="btn btn-sm btn-success">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p>No reports found.</p>
+                {% endif %}
+                <a href="{{ url_for('dashboard.reports') }}" class="btn btn-primary">View All Reports</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Test Status Chart
+    var statusCtx = document.getElementById('testStatusChart').getContext('2d');
+    var statusChart = new Chart(statusCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Completed', 'Running', 'Failed', 'Stopped'],
+            datasets: [{
+                data: {{ status_counts|tojson }},
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(0, 123, 255, 0.8)',
+                    'rgba(220, 53, 69, 0.8)',
+                    'rgba(255, 193, 7, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(40, 167, 69, 1)',
+                    'rgba(0, 123, 255, 1)',
+                    'rgba(220, 53, 69, 1)',
+                    'rgba(255, 193, 7, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                }
+            }
+        }
+    });
+
+    // Test Type Chart
+    var typeCtx = document.getElementById('testTypeChart').getContext('2d');
+    var typeChart = new Chart(typeCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ test_types|tojson }},
+            datasets: [{
+                label: 'Test Count',
+                data: {{ type_counts|tojson }},
+                backgroundColor: 'rgba(0, 123, 255, 0.8)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    precision: 0
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
